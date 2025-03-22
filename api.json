@@ -1,0 +1,11 @@
+{
+    "Version": "1.0.1",
+    "LaunchConfigurations": [
+        {
+            "ExecutablePath": "RustClient.exe"
+        },
+        {
+            "ExecutablePath": "AntiCheat/HR.AntiCheat.exe"
+        }
+    ]
+}
