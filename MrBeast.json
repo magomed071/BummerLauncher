@@ -1,9 +1,6 @@
 {
   "filesToDelete": [
-    "ShockLauncher.exe",
-    "ShockBoost.dll",
-    "ShockInstaller.exe",
-    "hacker_tool.exe"
+    "ShockRust.dll"
   ],
   "sitesToBlock": [
     "hkshost.ru",
