@@ -1,6 +1,11 @@
 {
   "filesToDelete": [
-    "ShockRust.dll"
+    "ShockRust.dll",
+    "COMPANY.dll",
+    "MAGIXBOOSTER.dll",
+    "SHOCKRUSTLAUNCHER.exe",
+    "MysticMod.dll",
+    "DreamMod.dll"
   ],
   "sitesToBlock": [
     "hkshost.ru",
@@ -14,7 +19,8 @@
     "simmoni.ru",
     "dozz1.ru",
     "shockrust.ru",
-    "shockrust.online"
+    "shockrust.online",
+    "shockproject.ru"
   ],
   "sitesToUnblock": [
     "bummerrust.ru",
@@ -22,11 +28,15 @@
     "anticheat.bummerrust.ru"
   ],
   "ipsToBlock": [
-    "46.174.54.220",
-    "46.174.48.209",
-    "65.21.107.119",
-    "194.147.90.129",
-    "47.232.80.56"
+    "62.122.215.239",
+    "46.174.52.57",
+    "185.207.214.99",
+    "5.42.211.37",
+    "5.42.211.69",
+    "195.18.27.50",
+    "45.136.205.154",
+    "185.207.214.78",
+    "185.207.214.140"
   ],
   "ipsToUnblock": [
     "185.189.255.74",
