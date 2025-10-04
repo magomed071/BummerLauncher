@@ -127,7 +127,7 @@ private void OnOpen(object sender, EventArgs e)
     reconnectAttempts = 0;
     _isReconnecting = false;
     LogWebSocketEvent("connection", "Connected successfully");
-    _ = SendMessageAsync(AuthCommand, config.ApiKey);
+    SendMessageAsync(AuthCommand, config.ApiKey);
 }
 
 private void OnMessage(object sender, MessageEventArgs e)
