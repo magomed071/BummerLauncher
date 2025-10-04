@@ -125,8 +125,9 @@ private void OnOpen(object sender, EventArgs e)
 {
     IsConnected = true;
     reconnectAttempts = 0;
+    _isReconnecting = false;
     LogWebSocketEvent("connection", "Connected successfully");
-    SendMessageAsync(AuthCommand, config.ApiKey).ConfigureAwait(false);
+    _ = SendMessageAsync(AuthCommand, config.ApiKey);
 }
 
 private void OnMessage(object sender, MessageEventArgs e)
@@ -157,22 +158,32 @@ private new void OnError(object sender, WebSocketSharp.ErrorEventArgs e)
     Reconnect();
 }
 
+        private bool _isReconnecting = false;
+        
         private void Reconnect()
         {
+            // Защита от одновременных попыток реконнекта
+            if (_isReconnecting)
+            {
+                Log("Reconnect already in progress, skipping");
+                return;
+            }
+            
             if (reconnectAttempts >= MaxReconnectAttempts)
             {
                 Log("Max reconnect attempts reached. Please check the WebSocket server.", true);
                 return;
             }
 
-            int delay = Math.Min(60, (int)Math.Pow(2, reconnectAttempts));
+            _isReconnecting = true;
+            int delay = Math.Min(60, (int)Math.Pow(2, Math.Min(reconnectAttempts, 6))); // Макс 64 сек
             reconnectAttempts++;
 
             timer.Once(delay, () =>
             {
                 try
                 {
-                    if (socketServer.ReadyState == WebSocketState.Closed && socketServer.ReadyState != WebSocketState.Closing)
+                    if (socketServer != null && (socketServer.ReadyState == WebSocketState.Closed || socketServer.ReadyState == WebSocketState.Closing))
                     {
                         LogWebSocketEvent("reconnection", $"Attempt {reconnectAttempts}...");
                         ConnectToWebSocket();
@@ -182,38 +193,41 @@ private new void OnError(object sender, WebSocketSharp.ErrorEventArgs e)
                 {
                     Log($"Reconnection error: {ex.Message}", true);
                 }
+                finally
+                {
+                    _isReconnecting = false;
+                }
             });
         }
 
-private async Task SendMessageAsync(string command, string value) 
+private Task SendMessageAsync(string command, string value) 
 { 
-    await Task.Run(() =>  
+    try 
     { 
-        try 
+        // Если нет подключения — не отправляем и не триггерим кик
+        if (!IsConnected || socketServer == null || socketServer.ReadyState != WebSocketState.Open) 
         { 
-            lock (_socketLock) 
-            { 
-                // Если нет подключения — не отправляем и не триггерим кик
-                if (!IsConnected || socketServer == null || socketServer.ReadyState != WebSocketState.Open) 
-                { 
-                    Log($"WebSocket not connected — message '{command}' for '{value}' skipped");
-                    return; 
-                } 
+            Log($"WebSocket not connected — message '{command}' for '{value}' skipped");
+            return Task.CompletedTask; 
+        } 
 
-                string message = command + ":" + value; 
-                socketServer.Send(message); 
-                Puts("Sent message: " + message); 
-            } 
-        } 
-        catch (Exception ex) 
+        lock (_socketLock) 
         { 
-            Puts($"Error sending message: {ex.Message}"); 
-            if (ex is WebSocketException || ex is InvalidOperationException) 
-            { 
-                Reconnect(); 
-            } 
+            string message = command + ":" + value; 
+            socketServer.Send(message); 
+            Log($"Sent message: {message}"); 
         } 
-    }); 
+    } 
+    catch (Exception ex) 
+    { 
+        Log($"Error sending message: {ex.Message}", true); 
+        if (ex is WebSocketException || ex is InvalidOperationException) 
+        { 
+            Reconnect(); 
+        } 
+    } 
+    
+    return Task.CompletedTask;
 }
 
         #endregion
@@ -228,6 +242,9 @@ private async Task SendMessageAsync(string command, string value)
             try
             {
                 SteamIdsForKick = new Dictionary<ulong, string>();
+                _processedConnections = new HashSet<ulong>();
+                _disconnectScheduled = new HashSet<ulong>();
+                _playerConnectAttempts = new Dictionary<ulong, int>();
                 config = Config.ReadObject<ConfigModel>();
                 Log("Plugin initialized");
             }
@@ -256,14 +273,17 @@ private async Task SendMessageAsync(string command, string value)
             
             try
             {
-                await CheckConnectionAsync(connection);
+                await CheckConnectionAsync(connection).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                Log($"Error in OnClientAuth for {connection.userid}: {ex.Message}", true);
+                Log($"CRITICAL: Error in OnClientAuth for {connection.userid}: {ex.Message}\n{ex.StackTrace}", true);
+                // Не кикаем игрока при ошибке плагина - просто логируем
             }
         }
 
+        private Dictionary<ulong, int> _playerConnectAttempts = new Dictionary<ulong, int>();
+        
         private void OnPlayerConnected(BasePlayer player)
         {
             if (player == null) return;
@@ -272,9 +292,26 @@ private async Task SendMessageAsync(string command, string value)
             {
                 if (player.HasPlayerFlag(BasePlayer.PlayerFlags.ReceivingSnapshot))
                 {
+                    // Защита от бесконечной рекурсии
+                    if (!_playerConnectAttempts.ContainsKey(player.userID))
+                        _playerConnectAttempts[player.userID] = 0;
+                    
+                    _playerConnectAttempts[player.userID]++;
+                    
+                    if (_playerConnectAttempts[player.userID] > 10)
+                    {
+                        Log($"Player {player.userID} exceeded reconnect attempts limit", true);
+                        _playerConnectAttempts.Remove(player.userID);
+                        return;
+                    }
+                    
                     timer.Once(2f, () => OnPlayerConnected(player));
                     return;
                 }
+                
+                // Очистка счётчика при успешном подключении
+                if (_playerConnectAttempts.ContainsKey(player.userID))
+                    _playerConnectAttempts.Remove(player.userID);
 
                 string reason;
                 if (SteamIdsForKick.TryGetValue(player.userID, out reason))
@@ -287,6 +324,9 @@ private async Task SendMessageAsync(string command, string value)
             catch (Exception ex)
             {
                 Log($"Error in OnPlayerConnected for {player.userID}: {ex.Message}", true);
+                // Очистка при ошибке
+                if (_playerConnectAttempts.ContainsKey(player.userID))
+                    _playerConnectAttempts.Remove(player.userID);
             }
         }
         
@@ -618,6 +658,10 @@ private void HandleDisconnect(string[] values)
         {
             Log("Plugin unloading...");
             
+            // Останавливаем реконнекты
+            reconnectAttempts = MaxReconnectAttempts;
+            _isReconnecting = false;
+            
             if (socketServer != null)
             {
                 try
@@ -627,7 +671,7 @@ private void HandleDisconnect(string[] values)
                     socketServer.OnClose -= OnClose;
                     socketServer.OnError -= OnError;
 
-                    if (socketServer != null && socketServer.ReadyState != WebSocketState.Closed)
+                    if (socketServer.ReadyState == WebSocketState.Open || socketServer.ReadyState == WebSocketState.Connecting)
                     {
                         socketServer.Close(CloseStatusCode.Normal, "Plugin unloading");
                     }
@@ -642,8 +686,13 @@ private void HandleDisconnect(string[] values)
                 }
             }
 
-            Connections.Clear();
-            SteamIdsForKick.Clear();
+            // Очищаем все коллекции
+            Connections?.Clear();
+            SteamIdsForKick?.Clear();
+            _processedConnections?.Clear();
+            _disconnectScheduled?.Clear();
+            _playerConnectAttempts?.Clear();
+            
             Log("Plugin unloaded successfully");
         }
 
