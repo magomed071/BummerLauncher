@@ -32,7 +32,9 @@
   "sitesToUnblock": [
     "bummerrust.ru",
     "launcher.bummerrust.ru",
-    "anticheat.bummerrust.ru"
+    "anticheat.bummerrust.ru",
+    "launcher.bummerrust.pw",
+    "anticheat.bummerrust.pw"
   ],
   "ipsToBlock": [
     "62.122.215.239",
