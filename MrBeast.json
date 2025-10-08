@@ -27,7 +27,8 @@
     "dreamrusttop.ru",
     "summer-rust.top",
     "shock.rest",
-    "companyrust.gamestores.app"
+    "companyrust.gamestores.app",
+    "oldrust.ru"
   ],
   "sitesToUnblock": [
     "bummerrust.ru",
@@ -51,7 +52,9 @@
     "65.21.137.102",
     "46.174.55.232",
     "37.230.228.30",
-    "46.174.55.135"
+    "46.174.55.135",
+    "80.242.59.130",
+    "80.242.59.77"
   ],
   "ipsToUnblock": [
     "185.189.255.74",
