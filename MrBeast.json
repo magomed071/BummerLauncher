@@ -39,10 +39,13 @@
   "sitesToUnblock": [
     "bummerrust.ru",
     "bummerrust.com",
+    "bummerrust.pw",
     "launcher.bummerrust.ru",
-    "anticheat.bummerrust.ru",
     "launcher.bummerrust.pw",
-    "anticheat.bummerrust.pw"
+    "launcher.bummerrust.com",
+    "anticheat.bummerrust.ru",
+    "anticheat.bummerrust.pw",
+    "anticheat.bummerrust.com"
   ],
   "ipsToBlock": [
     "62.122.215.239",
@@ -79,7 +82,12 @@
   ],
   "ipsToUnblock": [
     "5.42.211.61",
-    "185.189.255.74"
+    "185.189.255.74",
+    "23.177.185.6",
+    "185.232.205.90",
+    "185.239.141.219",
+    "195.133.17.129",
+    "185.143.238.18"
   ],
   "resetFirewall": true
 }
