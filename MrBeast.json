@@ -5,7 +5,11 @@
     "MAGIXBOOSTER.dll",
     "SHOCKRUSTLAUNCHER.exe",
     "MysticMod.dll",
-    "DreamMod.dll"
+    "DreamMod.dll",
+    "SummerMod.dll",
+    "CompanyBonus.exe",
+    "Updater.exe",
+    "DreamHelpers.dll"
   ],
   "sitesToBlock": [
     "hkshost.ru",
@@ -34,7 +38,8 @@
     "sunfirenew.gamestores.app",
     "dreamrusttop.gamestores.app",
     "rucompanymagix.ru",
-    "myrust.ru"
+    "myrust.ru",
+    "store.summer-rust.top"
   ],
   "sitesToUnblock": [
     "bummerrust.ru",
