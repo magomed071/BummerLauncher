@@ -1,14 +1,5 @@
 {
-  "filesToDelete": [
-    "COMPANY.dll",
-    "MAGIXBOOSTER.dll",
-    "MysticMod.dll",
-    "DreamMod.dll",
-    "SummerMod.dll",
-    "CompanyBonus.exe",
-    "Updater.exe",
-    "DreamHelpers.dll"
-  ],
+  "active": true,
   "sitesToBlock": [
     "hkshost.ru",
     "summer-rust.ru",
@@ -97,7 +88,12 @@
     "5.42.211.45",
     "5.42.211.87",
     "145.239.149.165",
-    "95.217.107.239"
+    "95.217.107.239",
+    "5.42.211.95",
+    "95.217.107.239",
+    "212.74.249.164",
+    "65.109.94.151",
+    "194.147.90.9"
   ],
   "ipsToUnblock": [
     "89.23.102.16",
